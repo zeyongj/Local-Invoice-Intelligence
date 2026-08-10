@@ -1,0 +1,31 @@
+Local Invoice Intelligence v4.0.0 file manifest
+====================================================
+867eca1af8e5524dae1a4f28c363902a0525450749a3efb0a93031394a96c56a      2982  ARCHITECTURE.md
+f7d86691ece9e07dda901a5264ca15a6bb29efe4cb9b7b99bba5966ba5123d99      1141  CHANGELOG.md
+3a9e8212f57a678c83731ecc533c62fa5dd362b483a4d3fbc77a31e884865504      3214  PERFORMANCE.md
+df8283c77cf281500aaa8061d34e269339136fdc9a67f5d8f4b5942b3bcffeac      1483  PORTFOLIO_DATA_NOTES.md
+0bf62acc88ff7a4a95ceccf05e27d12295bf1df896514841e3c55a5503e148d6      6644  README.md
+cb8fb32228d06d85f98941a867bfdd0125075e566a5fcab85715820af45255df       931  SECURITY.md
+54a1c5520a01081b58208966948c69fbc2cfa3b4c7b1711238e34f9764d526e4      2636  VALIDATION.txt
+4d9742284e28e5174b6351bd23a8c5b24de312128a4b10919f5193ee11ebbaf8       350  build_windows_exe.bat
+ebbfe040dd122e0e94b329bab8544111ff910833a4b34e59f3b424d30737928a     56856  data/pm.csv
+cad62ec2adfe8a20908035078bd5eb42fe99597a4aa31a448d8458155c3018dd        68  install_dependencies.bat
+e7fe7bdd76b5f02fdea590651060b1d820d7a85157b2510342b97ca5e4ba6a67      2570  invoice_cli.py
+0133c7657dbc62c3db9b4b4d73162fbcaf9e3dd5a48efa0c0c41be532598343a     12244  invoice_core.py
+02671bca710b1999b970be564d8a6b3c7a5d778f5ea8f31d5a4698ec63c8b92f     62297  invoice_database.py
+73b2e3ecd0b9f00c1b37a5d6c08561786a04b300f9e0bf20dfadfc7062d34845     31725  invoice_engine.py
+6e8243c1a9b6a5302497a19be1e3b1cb1d1599207d01dc43ef775904c53d75e7      5150  invoice_models.py
+fbbeaca9b6218e26da11d87e8619bef66ec935237a6e2dcbdf3b4122e54a897b      1642  invoice_normalization.py
+53843d3a91912b128b43f25049dc16cd54be565d8de1fa9d09a7aa198fcf239d      8978  invoice_parsers.py
+dda9c386bf976b8b3209c2fedc82286ecb872ae148a8f9b9565afe79a443e8b3     48792  invoice_ui.py
+9c701170816df824d103f2740412c60d796d8bad5825b6a16fccebebe4f27953        67  main.py
+f0f3eeb98fdc33fd5d443ff245a2bf069fae1b3308c37c053783569eddae9cf9      8603  portfolio_intelligence.py
+a34a62b6b4dde3b82f05def6affb82cfdae1719f5b2f708786224b10e033393e        18  requirements-build.txt
+36ab08d76cd8a1c0b0d54bf5b3757ad9ed867938bdd4ae701384a986ad59b31f        17  requirements.txt
+2412705d493417053d588cb0e56778b1cf3382f24f4573be719bc3d93bab38dd        57  run_app.bat
+d0a5179e44e0206108b1fd09e2ecc8c792aae09903c85a3cd4cbf4aaf2335bd9       180  tests/conftest.py
+8bcd67ce01f0c7bd6c06837795f2010b3b0a09b397b08672af0201ecf053757b      5117  tests/test_engine.py
+a88c64433fcdee6218c7704f95ed9e16b9206963c384e1bd17fb96bebba8a2ac       514  tests/test_spatial.py
+4a990c4fec5fc0c95883a4da95d7be83be50d40a1183bdb174f1c0f5de2996fa      6267  tests/test_v3_enterprise.py
+985c4d1cd7b917270183a7369b1ef0be3d7048cff7a0086c6ecbec360725a81b      9554  tests/test_v4_portfolio.py
+ac0602d6e76a9e8e8a9d8f506d39ea7cd45dbf64152009152b50274a1ecb1b80       104  version.py
