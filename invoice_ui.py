@@ -121,6 +121,23 @@ class InvoiceApp(tk.Tk):
         ttk.Label(options, text="Reviewer", style="Card.TLabel").pack(side="left", padx=(20, 6))
         ttk.Entry(options, textvariable=self.actor_var, width=18).pack(side="left")
 
+        # v4.0.1: primary processing actions live in the always-visible
+        # controls card rather than below the resizable content body.  On
+        # Windows systems using 125%/150% display scaling the old bottom
+        # action bar could be clipped off-screen even though the application
+        # itself was otherwise usable.
+        top_actions = ttk.Frame(controls, style="Card.TFrame")
+        top_actions.grid(row=3, column=1, columnspan=3, sticky="ew", pady=(12, 0))
+        self.cancel_btn = ttk.Button(top_actions, text="Cancel safely", command=self.cancel_analysis)
+        self.cancel_btn.pack(side="left")
+        self.cancel_btn.state(["disabled"])
+        self.analyze_selected_btn = ttk.Button(
+            top_actions, text="Analyze selected", style="Accent.TButton", command=self.analyze_selected
+        )
+        self.analyze_selected_btn.pack(side="right")
+        self.analyze_all_btn = ttk.Button(top_actions, text="Analyze all", command=self.analyze_all)
+        self.analyze_all_btn.pack(side="right", padx=(0, 8))
+
         summary = ttk.Frame(container); summary.pack(fill="x", pady=(0, 12))
         for i, (label, variable) in enumerate(self.summary_vars.items()):
             summary.columnconfigure(i, weight=1); card = ttk.Frame(summary, style="Card.TFrame", padding=(14, 10))
@@ -164,10 +181,6 @@ class InvoiceApp(tk.Tk):
         row = ttk.Frame(footer); row.pack(fill="x", pady=(6, 0))
         ttk.Label(row, textvariable=self.current_file_var, style="Subtitle.TLabel").pack(side="left")
         ttk.Label(row, textvariable=self.progress_text, style="Subtitle.TLabel").pack(side="right")
-        actions = ttk.Frame(container); actions.pack(fill="x", pady=(12, 0))
-        self.cancel_btn = ttk.Button(actions, text="Cancel safely", command=self.cancel_analysis); self.cancel_btn.pack(side="left"); self.cancel_btn.state(["disabled"])
-        self.analyze_selected_btn = ttk.Button(actions, text="Analyze selected", style="Accent.TButton", command=self.analyze_selected); self.analyze_selected_btn.pack(side="right")
-        self.analyze_all_btn = ttk.Button(actions, text="Analyze all", command=self.analyze_all); self.analyze_all_btn.pack(side="right", padx=(0, 8))
 
     def choose_source(self) -> None:
         path = filedialog.askdirectory(title="Choose invoice folder")
