@@ -1,119 +1,152 @@
-# Complexity and Performance Analysis
+# v4 Complexity and Performance Analysis
 
 Let:
 
-- `N` = number of discovered PDF files
-- `W_i` = number of extracted PDF words in invoice `i`
-- `L_i` = number of reconstructed text lines in invoice `i`
-- `M` = number of invoice records already stored in SQLite
-- `H` = historical window size (bounded at 24 bills)
-- `A` = number of anchor lines for a field (normally a tiny constant)
-- `k` = number of nearby lines returned from a spatial bucket query (normally small)
-
-## Directory discovery
-
-The application discovers PDFs and sorts their paths for deterministic display:
-
-- Discovery: `O(N)`
-- Sorting: `O(N log N)`
-- Memory: `O(N)` paths
-
-For normal AP folders (hundreds to tens of thousands of invoices), PDF parsing dominates this cost.
+- `N` = number of PDFs in a batch
+- `W` = words extracted from one PDF
+- `L` = reconstructed text lines
+- `M` = invoices already indexed in SQLite
+- `P` = canonical properties in the portfolio
+- `A` = utility accounts
+- `H` = bounded historical observations (default <= 36)
 
 ## PDF extraction
 
-PyMuPDF word extraction plus line reconstruction is approximately:
+PyMuPDF extraction and line reconstruction are approximately linear in document content:
 
-`O(W_i)` time and `O(L_i)` retained line memory per active PDF.
+```text
+O(W)
+```
 
-The application does not load all PDF contents into RAM. It processes one invoice at a time, so PDF-content working memory is approximately:
+This remains the dominant CPU cost for born-digital utility invoices.
 
-`O(max L_i)`
+## Spatial extraction
 
-rather than `O(sum L_i)`.
+v2-style all-lines geometric comparison can approach `O(L²)`.
 
-## Two-pass parsing
+v3/v4 retain the page/Y-bucket spatial index:
 
-Only the first three pages are parsed initially. Remaining pages are read only when critical fields, meter, or consumption are still missing.
+```text
+index build: O(L)
+local anchor query: O(k) expected
+```
 
-For invoices whose important fields are on the first pages, work is proportional to those pages rather than the entire PDF. This is especially useful for long telecom statements.
+where `k` is the small number of lines in nearby buckets.
 
-## Regex parsing
+## Portfolio master import
 
-The number of fields and regex patterns is fixed and small. With bounded, non-pathological expressions, parsing is approximately:
+For `R` PM CSV source rows and `Q` aliases/postal/location records:
 
-`O(L_i)` expected time.
+```text
+O(R + Q)
+```
 
-## Spatial search: before vs now
+SQLite indexed inserts are effectively bounded by B-tree `O(log P)` operations. Import is not performed per invoice.
 
-A naive anchor/value implementation compares every line with every other line:
+## Property lookup
 
-`O(L_i^2)` worst-case.
+Vendor/account mapping uses the unique SQLite index:
 
-This version builds a page/Y-bucket index once:
+```text
+(vendor, account_number_canonical)
+```
 
-- Index build: `O(L_i)`
-- Anchor scan: `O(L_i)`
-- Nearby lookup: `O(A * k)` expected
+Lookup:
 
-So spatial extraction is approximately:
+```text
+O(log A)
+```
 
-`O(L_i + A*k)` → effectively `O(L_i)` for ordinary invoices.
+Project alias lookup:
 
-## Layout-profile lookup
+```text
+O(log P)
+```
 
-Vendor/field layout profiles have a primary key in SQLite. After a profile has at least three samples, the engine searches only a normalized page region.
+Path-based property suggestion checks aliases only for unmapped accounts. It is intentionally a fallback path; mapped accounts use the direct utility-account index.
 
-- Profile DB lookup: indexed, approximately `O(log P)` where `P` is tiny
-- Region search: `O(k)` expected after bucket indexing
+## Portfolio duplicate / revision
 
-Profiles therefore reduce candidate work and false positives on recurring vendor layouts.
+Exact logical fingerprint lookup uses an indexed hash:
 
-## Historical anomaly checks
+```text
+O(log M)
+```
 
-`invoices(vendor, account_number)` is indexed. The engine retrieves at most 24 prior bills:
+Revision candidate lookup uses indexed vendor/account plus billing identity and is approximately:
 
-- Indexed lookup: approximately `O(log M + H)`
-- Median/MAD: `O(H log H)` because Python median sorts; `H <= 24`, so this is effectively constant
-- Meter continuity: `O(H)`
+```text
+O(log M + r)
+```
 
-## Logical duplicate detection
+where `r` is a very small set of same-account/same-period candidates.
 
-Canonical fingerprint construction is constant-size business data:
+## Billing continuity
 
-- Hash creation: `O(1)` with respect to PDF size
-- Indexed fingerprint lookup: approximately `O(log M)`
+Historical billing periods are bounded (`H <= 36`):
 
-This is intentionally cheaper than cryptographically hashing all PDF bytes, which would require `O(file_size)` I/O merely to determine duplicate identity.
+```text
+O(H)
+```
+
+No unbounded scan of the entire invoice table is required.
+
+## Historical anomalies
+
+Amount, consumption and unit-cost histories are bounded to `H <= 36`.
+
+Median/MAD on each list:
+
+```text
+O(H log H)
+```
+
+Since `H` is a small constant in practice, this is negligible compared with PDF parsing.
 
 ## Incremental processing
 
-For unchanged files the program checks path, size, and nanosecond modification time against SQLite, then loads the cached result.
+Unchanged files are detected using path + file size + nanosecond mtime and are loaded from SQLite rather than reparsed.
 
-A repeat run therefore costs approximately:
+A warm run therefore approaches:
 
-`O(N log M + sum W_changed)`
+```text
+O(N log M)
+```
 
-instead of reparsing every PDF.
+for metadata/index lookups, while a cold/changed run is dominated by:
 
-In an AP workflow where 20,000 historical files exist but only 50 are new/changed, the expensive PDF parsing term applies only to those 50 files.
+```text
+O(sum(W_changed))
+```
 
-## Batch memory
+## Memory
 
-The parser's PDF working set is one active document, but the GUI retains the selected file list and result objects for display/export:
+The engine streams one invoice at a time:
 
-`O(N + max L_i)` memory.
+```text
+read → parse → validate → save → release
+```
 
-For very large archives (e.g. hundreds of thousands of files), the next scalability step would be UI pagination/virtualization and streaming CSV export; it is not necessary for ordinary clerk-level utility invoice batches.
+Therefore PDF working memory is approximately:
+
+```text
+O(W_max)
+```
+
+rather than `O(N × W)`.
+
+The property master and histories remain in SQLite; the application does not load all historical invoices into RAM.
 
 ## ETA
 
-Estimated remaining time uses the median processing duration of the most recent 12 parsed invoices multiplied by the number remaining. Median is intentionally used instead of mean so that one unusually large statement does not make the ETA unstable.
+The GUI uses the median of recent actual processing times multiplied by remaining items. Median smoothing prevents one unusually large statement from destabilizing the estimate.
 
-## Low-spec Windows recommendations
+## Low-spec workstation guidance
 
-- Keep OCR disabled unless truly necessary.
-- Use the default single-document processing path; it avoids memory spikes and leaves CPU available for Excel/Outlook/accounting software.
-- Put the SQLite DB and CSV on a local SSD when possible; copy/export later to a network drive if required.
-- Leave incremental processing enabled.
-- Use vendor profiles/history over adding general-purpose ML models.
+Recommended default:
+
+```text
+Balanced / one processing stream
+```
+
+The additional v4 database checks are cheap relative to PDF extraction. The largest performance risk remains enabling local OCR on image-only PDFs; OCR is intentionally outside the default v4 processing path.
