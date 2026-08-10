@@ -1,0 +1,71 @@
+Local Invoice Intelligence v4.0.0 — validation summary
+======================================================
+
+Validation environment
+----------------------
+- Python source compile/import validation completed.
+- Automated test suite completed.
+- CLI end-to-end smoke test completed.
+- Environment is not a Windows 11 Enterprise desktop, so final native ttk/DPI/AppLocker/WDAC visual/deployment UAT remains a target-machine responsibility.
+
+Automated tests
+---------------
+23 passed
+
+Coverage includes
+-----------------
+- TELUS end-to-end extraction
+- BC Hydro extraction
+- FortisBC/generic regression coverage inherited from v3
+- spatial Y-bucket indexing
+- logical duplicate detection
+- duplicate exclusion from history
+- layout-profile learning
+- BC Hydro spaced/unspaced account identity
+- BC Hydro leading-zero preservation
+- v2/v3 schema migration/backfill behavior
+- field correction audit trail
+- safe cancel/resume
+- v4 PM CSV import
+- 5093 / 5093-1 / 5093-2 / 5093-3 canonical project mapping
+- no blind parent inference for standalone 5164-10
+- repeated canonical project rows retained in property_locations
+- Property × Vendor × Account × Meter mapping
+- unmapped-account path suggestion and review routing
+- mapping cleanup of resolved portfolio exceptions
+- possible revised/reissued invoice detection
+- revised invoice excluded from effective history baseline
+- revised identical period not double-reported as overlap
+- billing-period overlap detection
+- billing-period gap detection
+- amount anomaly detection
+- consumption anomaly detection
+- effective unit-cost anomaly detection
+- amount/consumption divergence
+
+Bundled portfolio snapshot
+--------------------------
+Source rows parsed:       447
+Canonical project IDs:    442
+Project aliases imported: 583
+Postal-code observations: 477
+
+The canonical-project count is lower than source-row count because the PM CSV contains repeated internal project numbers on multiple address rows. v4 retains those source rows in property_locations rather than overwriting them.
+
+CLI smoke test
+--------------
+Synthetic file path:
+  .../5093-1/sample.pdf
+
+Observed:
+  Vendor:                    BC HYDRO
+  Raw account:               902 741
+  Canonical account:         902741
+  Suggested canonical project: 5093
+  Billing start:             2026-07-01
+  Billing end:               2026-07-31
+  Status before utility mapping: REVIEW_REQUIRED
+  Portfolio flag:            UNMAPPED_UTILITY_ACCOUNT
+  SQLite schema:             4
+
+This is intentional: path/project evidence may suggest a project, but the first utility-account mapping still requires a human master-data decision.
